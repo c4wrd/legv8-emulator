@@ -1,0 +1,11 @@
+{
+  "name": "legv8-vm",
+  "version": "0.0.1",
+  "description": "A virtual machine for the LEGv8 assembly instruction set",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Cory Forward",
+  "license": "ISC"
+}
