@@ -10,6 +10,7 @@
  */
 
 import { BigInteger } from 'jsbn';
+import { Register } from './cpu/register';
 import { Flags } from './flags';
 import { IMemoryBuffer } from './memory';
 
@@ -20,23 +21,35 @@ export class LEGv8Machine {
     public flags: Flags;
     
     public registers: BigInteger[];
-    public sp: number;
-    public fp: number;
-    public lr: number;
-    public xzr: BigInteger = BigInteger.ZERO;
 
     public operations: Operations;
 
     constructor(public memory: IMemoryBuffer) {
-        this.registers = new Array<BigInteger>(27);
+        this.registers = new Array<BigInteger>(32);
         this.flags = new Flags();
-        this.sp = memory.getStackTop();
+        /*this.sp = memory.getStackTop();
         this.fp = memory.getStackTop();
-        this.lr = 0;
+        this.lr = 0;*/
         this.operations = new Operations(this);
-        for ( var i = 0 ; i < 27 ; i++ ) {
+        for ( var i = 0 ; i < 32 ; i++ ) {
             this.registers[i] = new BigInteger('0');
         }
+    }
+
+    public get sp () {
+        return this.registers[Register.SP];
+    }
+
+    public set sp(value: BigInteger | number) {
+        
+        switch ( typeof value ) {
+            case 'BigInteger':
+                this.registers[Register.SP] = value;
+                break;
+            case 'number':
+                this.registers[Register.SP] = new BigInteger(value.toString());
+                break;
+        } 
     }
 
 }
