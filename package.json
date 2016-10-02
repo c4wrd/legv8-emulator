@@ -1,11 +1,17 @@
 {
-  "name": "legv8-vm",
+  "name": "legv8-emulator",
   "version": "0.0.1",
-  "description": "A virtual machine for the LEGv8 assembly instruction set",
+  "description": "An emulator for a CPU that supports the LEGv8 instruction set",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Cory Forward",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "jsbn": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^2.0.3"
+  }
 }

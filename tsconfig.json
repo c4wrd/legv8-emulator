@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "rootDir": "",
-    "outDir": "dsrcist",
+    "rootDir": "src",
+    "outDir": "dist",
     "moduleResolution": "node",
     "module": "commonjs",
     "declaration": true,
@@ -22,8 +22,10 @@
   },
   "exclude": [
     "node_modules",
-    "dist",
-    "typings/main",
-    "typings/main.d.ts"
+    "dist"
+  ],
+  "include": [
+    "./typings/**/*.d.ts",
+    "src/**/*.ts"
   ]
 }
