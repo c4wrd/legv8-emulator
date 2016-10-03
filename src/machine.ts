@@ -10,7 +10,7 @@
  */
 
 import { BigInteger } from 'jsbn';
-import { Register } from './cpu/register';
+import { Register } from './cpu';
 import { Flags } from './flags';
 import { IMemoryBuffer } from './memory';
 
@@ -22,15 +22,12 @@ export class LEGv8Machine {
     
     public registers: BigInteger[];
 
-    public operations: Operations;
-
     constructor(public memory: IMemoryBuffer) {
         this.registers = new Array<BigInteger>(32);
         this.flags = new Flags();
         /*this.sp = memory.getStackTop();
         this.fp = memory.getStackTop();
         this.lr = 0;*/
-        this.operations = new Operations(this);
         for ( var i = 0 ; i < 32 ; i++ ) {
             this.registers[i] = new BigInteger('0');
         }
@@ -40,42 +37,25 @@ export class LEGv8Machine {
         return this.registers[Register.SP];
     }
 
-    public set sp(value: BigInteger | number) {
-        
-        switch ( typeof value ) {
-            case 'BigInteger':
-                this.registers[Register.SP] = value;
-                break;
-            case 'number':
-                this.registers[Register.SP] = new BigInteger(value.toString());
-                break;
-        } 
+    public get fp() {
+        return this.registers[Register.FP];
     }
 
-}
-
-export class Operations {
-
-    private machine: LEGv8Machine;
-
-    constructor(machine: LEGv8Machine) {
-        this.machine = machine;
+    public get lr() {
+        return this.registers[Register.LR];
     }
 
+    public get xzr() {
+        return this.registers[Register.XZR];
+    }
 
-    /**
-     * Issue: need to move registers into single array or figure
-     * a way to specify register via parameter in op_add. Currently
-     * not possible to use XZR register.
-     */
-    op_add(dest, r1: number, r2: number) {
-        let result = this.machine.registers[r1].add(this.machine.registers[r2]);
-        if ( result.bitCount() > 64 ) {
-            this.machine.flags.overflow();
+    public set_register(register: Register, value: BigInteger): void {
+        if ( register == Register.XZR ) {
+            return;
         }
-        result
-            .and(Int64Mask)
-            .copyTo(this.machine.registers[dest]);
+
+        // mask with the Int64 mask to ensure the value is at max 64 bits
+        this.registers[register] = value.and(Int64Mask);
     }
 
 }
