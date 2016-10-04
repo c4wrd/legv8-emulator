@@ -1,4 +1,5 @@
 import { BigInteger } from 'jsbn';
+import { ILegv8Op } from '../operations';
 
 export class MemoryAllocationResult {
     constructor(public success: boolean, public address: number) {}
@@ -34,6 +35,12 @@ export interface IMemoryController {
 
     storeDoubleWord(address: number, value: BigInteger);
 
+    allocateStaticDataBlock(length: number): number;
+
+    allocateDynamicDataBlock(length: number): number;
+    
+    fetchInstruction(address: number): ILegv8Op;
+
 }
 
 /**
@@ -43,32 +50,69 @@ export interface IMemoryController {
  * Stack            | 0x7FFF0000 - 0x7FFFFFFF(*) ( 0x7FFFFFFF is the top of the stack )
  * Static           | 0x10000000 - 0x1000FFFF
  * Dynamic          | 0xC0000000 - 0xC000FFFF
- * Text             | 0x10000000 - 0x1000????(*) (There is no definite size on the program counter, 
+ * Text             | 0x40000000 - 0x1000????(*) (There is no definite size on the program counter, 
  *                                                being it is not actually pointing to data)
  */
 
 export class MemoryController implements IMemoryController {
 
     private _data: ArrayBuffer;
+    private _program: Array<ILegv8Op>;
+    private _programLoaded: boolean = false;
+    private _canContinue: boolean = false;
     private view: DataView;
 
+    private _staticIndex: number = 0;
+    private _dynamicIndex: number = 0;
+
     constructor() {
-        this._data = new ArrayBuffer(0xFFFF*3);
+        this._data = new ArrayBuffer(0x10000*3);
         this.view = new DataView(this._data);
+        this._program = new Array();
+    }
+
+    public fetchInstruction(address: number): ILegv8Op {
+
+        let instructionIndex = this.virtToPhys(address);
+
+        if ( this._program.length == 0 || this._programLoaded == false) {
+            throw new Error("The program was not loaded");
+        } else if ( instructionIndex >= this._program.length || !this._canContinue) {
+            this._canContinue = false;
+            throw new RangeError("Program has reached the end of it's execution");
+        }
+
+        return this._program[instructionIndex];
+    }
+
+    public allocateStaticDataBlock(length: number): number {
+        let address = this.physToVirt(0x10000 + this._staticIndex);
+        this._staticIndex += length + 1;
+        return address;
+    }
+
+    public allocateDynamicDataBlock(length: number): number {
+        let address = this.physToVirt(0x20000 + this._dynamicIndex);
+        this._dynamicIndex += length + 1;
+        return address;
     }
 
     /**
      * Translates a physical value of our data buffer into a virtual
      * address such as 0xFFAD -> 0x7FFFFFAD.
      */
-    private physToVirt(address: number): number {
-        if ( address <= 0xFFFF ) {  // stack
-            return address + 0x7FFF0000;
-        } else if ( address <= 0xFFFF * 2 ) {   // static
-            return address + 0x10000000;
+    private physToVirt(index: number): number {
+        if ( 0 <= index && index < 0x10000 ) {  // stack
+            return index + 0x7FFF0000;
+        } else if ( 0x10000 <= index && index < 0x20000 ) {   // static
+            return index + 0x10000000;
         } else {
-            return address + 0xC0000000;    // dynamic
+            return index + 0xC0000000;    // dynamic
         }
+    }
+
+    private instructionIndexToVirtual(index: number) {
+        return (index * 4) + 0x40000000;
     }
 
     private virtToPhys(address: number) {
@@ -76,9 +120,11 @@ export class MemoryController implements IMemoryController {
             case 0x7FFF:    // stack
                 return address & 0xFFFF;
             case 0x1000:    // static
-                return address & 0xFFFF + 0xFFFF;
+                return address & 0xFFFF + 0x10000;
             case 0xC000:    // dynamic
-                return address & 0xFFFF + (0xFFFF * 2);
+                return address & 0xFFFF + 0x20000;
+            case 0x4000:    // executable program
+                return (address & 0xFFFF) / 4;
         }
         throw new Error("Memory.translateVirtToPhys: Invalid virtual address");
     }
@@ -160,6 +206,7 @@ export class MemoryController implements IMemoryController {
         this.storeWord(address, hi);
         this.storeWord(address + 4, lo);
     }
+
 
 
 }

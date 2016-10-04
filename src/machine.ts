@@ -13,7 +13,7 @@ import { BigInteger } from 'jsbn';
 import { Register } from './cpu';
 import { Flags } from './flags';
 import { IMemoryController } from './memory';
-import { Int64Mask } from './math';
+import { Int64Mask, Int } from './math';
 
 export class LEGv8Machine {
 
@@ -27,7 +27,7 @@ export class LEGv8Machine {
         this.flags = new Flags();
         this._pc = 0;
         for ( var i = 0 ; i < 32 ; i++ ) {
-            this.registers[i] = new BigInteger('0');
+            this.registers[i] = Int.make(0);
         }
     }
 
