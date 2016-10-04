@@ -1,19 +1,17 @@
 import { BigInteger } from 'jsbn';
+import { Register } from './cpu';
 import { Flags } from './flags';
-import { IMemoryBuffer } from './memory';
+import { IMemoryController } from './memory';
 export declare class LEGv8Machine {
-    memory: IMemoryBuffer;
-    flags: Flags;
+    private _pc;
+    private memory_controller;
     registers: BigInteger[];
-    sp: number;
-    fp: number;
-    lr: number;
-    xzr: BigInteger;
-    operations: Operations;
-    constructor(memory: IMemoryBuffer);
-}
-export declare class Operations {
-    private machine;
-    constructor(machine: LEGv8Machine);
-    op_add(dest: any, r1: number, r2: number): void;
+    flags: Flags;
+    constructor(memory_ctrl: IMemoryController);
+    readonly sp: BigInteger;
+    readonly fp: BigInteger;
+    readonly lr: BigInteger;
+    readonly xzr: BigInteger;
+    readonly pc: number;
+    safelySetRegister(register: Register, value: BigInteger): void;
 }

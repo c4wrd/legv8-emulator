@@ -1,38 +1,58 @@
 "use strict";
-var jsbn_1 = require('jsbn');
+var cpu_1 = require('./cpu');
 var flags_1 = require('./flags');
-var Int64Mask = new jsbn_1.BigInteger('FFFFFFFF', 16);
+var math_1 = require('./math');
 var LEGv8Machine = (function () {
-    function LEGv8Machine(memory) {
-        this.memory = memory;
-        this.xzr = jsbn_1.BigInteger.ZERO;
-        this.registers = new Array(27);
+    function LEGv8Machine(memory_ctrl) {
+        this.registers = new Array(32);
         this.flags = new flags_1.Flags();
-        this.sp = memory.getStackTop();
-        this.fp = memory.getStackTop();
-        this.lr = 0;
-        this.operations = new Operations(this);
-        for (var i = 0; i < 27; i++) {
-            this.registers[i] = new jsbn_1.BigInteger('0');
+        this._pc = 0;
+        for (var i = 0; i < 32; i++) {
+            this.registers[i] = math_1.Int.make(0);
         }
     }
+    Object.defineProperty(LEGv8Machine.prototype, "sp", {
+        get: function () {
+            return this.registers[cpu_1.Register.SP];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(LEGv8Machine.prototype, "fp", {
+        get: function () {
+            return this.registers[cpu_1.Register.FP];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(LEGv8Machine.prototype, "lr", {
+        get: function () {
+            return this.registers[cpu_1.Register.LR];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(LEGv8Machine.prototype, "xzr", {
+        get: function () {
+            return this.registers[cpu_1.Register.XZR];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(LEGv8Machine.prototype, "pc", {
+        get: function () {
+            return this._pc;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    LEGv8Machine.prototype.safelySetRegister = function (register, value) {
+        if (register == cpu_1.Register.XZR) {
+            return;
+        }
+        this.registers[register] = value.and(math_1.Int64Mask);
+    };
     return LEGv8Machine;
 }());
 exports.LEGv8Machine = LEGv8Machine;
-var Operations = (function () {
-    function Operations(machine) {
-        this.machine = machine;
-    }
-    Operations.prototype.op_add = function (dest, r1, r2) {
-        var result = this.machine.registers[r1].add(this.machine.registers[r2]);
-        if (result.bitCount() > 64) {
-            this.machine.flags.overflow();
-        }
-        result
-            .and(Int64Mask)
-            .copyTo(this.machine.registers[dest]);
-    };
-    return Operations;
-}());
-exports.Operations = Operations;
 //# sourceMappingURL=machine.js.map

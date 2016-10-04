@@ -41,6 +41,10 @@ export interface IMemoryController {
     
     fetchInstruction(address: number): ILegv8Op;
 
+    getProgramBaseAddress(): number;
+
+    getStackBaseAddress(): number
+
 }
 
 /**
@@ -55,6 +59,9 @@ export interface IMemoryController {
  */
 
 export class MemoryController implements IMemoryController {
+
+    private PROG_BASE = 0x40000000;
+    private STACK_BASE = 0x7FFFFFFF;
 
     private _data: ArrayBuffer;
     private _program: Array<ILegv8Op>;
@@ -95,6 +102,14 @@ export class MemoryController implements IMemoryController {
         let address = this.physToVirt(0x20000 + this._dynamicIndex);
         this._dynamicIndex += length + 1;
         return address;
+    }
+
+    public getProgramBaseAddress(): number {
+        return this.PROG_BASE;
+    }
+
+    public getStackBaseAddress(): number {
+        return this.STACK_BASE;
     }
 
     /**

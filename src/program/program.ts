@@ -1,22 +1,30 @@
+import { Map } from 'core-js';
+
 import { ILegv8Op } from '../operations';
+import { IVarDecl } from './variable';
 
 export interface IProgram {
-    
+
     operations: Array<ILegv8Op>;
+    labels: Map<String, number>;
+    variables: Map<String, IVarDecl>;
     
-    pushOperation(operation: ILegv8Op);
     pushLabel(label: string);
+    pushOperation(operation: ILegv8Op);
+    pushVarDeclaration(name: string, variableDeclaration: IVarDecl);
 
 }
 
 export class Program implements IProgram {
 
-    labels: { [key: string]: number };
-    operations: Array<ILegv8Op>;
+    public operations: Array<ILegv8Op>;
+    public labels: Map<string, number>;
+    public variables: Map<string, IVarDecl>;
 
     constructor() {
         this.operations = new Array();
-        this.labels = {} as { [key: string]: number };
+        this.labels = new Map<string, number>();
+        this.variables = new Map<string, IVarDecl>();
     }
 
     pushOperation(operation: ILegv8Op) {
@@ -24,7 +32,11 @@ export class Program implements IProgram {
     }
 
     pushLabel(operation: string) {
-        this.labels[operation] = this.operations.length;
+        this.labels.set(operation, this.operations.length);
+    }
+
+    pushVarDeclaration(name: string, variableDeclaration: IVarDecl) {
+        this.variables.set(name, variableDeclaration);
     }
 
 }
