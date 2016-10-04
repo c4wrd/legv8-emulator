@@ -1,5 +1,6 @@
 "use strict";
 var jsbn_1 = require('jsbn');
+var program_1 = require('../program');
 var MemoryAllocationResult = (function () {
     function MemoryAllocationResult(success, address) {
         this.success = success;
@@ -10,24 +11,47 @@ var MemoryAllocationResult = (function () {
 exports.MemoryAllocationResult = MemoryAllocationResult;
 var MemoryController = (function () {
     function MemoryController() {
+        this.PROG_BASE = 0x40000000;
+        this.STACK_BASE = 0x7FFFFFFF;
         this._programLoaded = false;
-        this._canContinue = false;
         this._staticIndex = 0;
         this._dynamicIndex = 0;
-        this._data = new ArrayBuffer(0x10000 * 3);
+        this._data = new ArrayBuffer(0x10000 * 2);
         this.view = new DataView(this._data);
         this._program = new Array();
     }
+    MemoryController.prototype.reset = function () {
+        this._data = new ArrayBuffer(0x10000 * 2);
+        this.view = new DataView(this._data);
+        this._program = new Array();
+        this._staticIndex = 0;
+        this._dynamicIndex = 0;
+        this._programLoaded = false;
+    };
+    MemoryController.prototype.canFetchInstruction = function (address) {
+        return this.virtToPhys(address) < this._program.length;
+    };
     MemoryController.prototype.fetchInstruction = function (address) {
         var instructionIndex = this.virtToPhys(address);
         if (this._program.length == 0 || this._programLoaded == false) {
             throw new Error("The program was not loaded");
         }
-        else if (instructionIndex >= this._program.length || !this._canContinue) {
-            this._canContinue = false;
+        else if (instructionIndex >= this._program.length) {
             throw new RangeError("Program has reached the end of it's execution");
         }
         return this._program[instructionIndex];
+    };
+    MemoryController.prototype.loadProgram = function (program) {
+        try {
+            this._program = program.operations;
+            var programContext = new program_1.ProgramContext(program, this);
+            this._programLoaded = true;
+            return programContext;
+        }
+        catch (e) {
+            this._programLoaded = false;
+            throw new Error("MemoryController.loadProgram: The program failed to load with error: " + e);
+        }
     };
     MemoryController.prototype.allocateStaticDataBlock = function (length) {
         var address = this.physToVirt(0x10000 + this._staticIndex);
@@ -39,15 +63,21 @@ var MemoryController = (function () {
         this._dynamicIndex += length + 1;
         return address;
     };
+    MemoryController.prototype.getProgramBaseAddress = function () {
+        return this.PROG_BASE;
+    };
+    MemoryController.prototype.getStackBaseAddress = function () {
+        return this.STACK_BASE;
+    };
     MemoryController.prototype.physToVirt = function (index) {
         if (0 <= index && index < 0x10000) {
             return index + 0x7FFF0000;
         }
         else if (0x10000 <= index && index < 0x20000) {
-            return index + 0x10000000;
+            return index - 0x10000 + 0x10000000;
         }
         else {
-            return index + 0xC0000000;
+            return index - 0x20000 + 0xC0000000;
         }
     };
     MemoryController.prototype.instructionIndexToVirtual = function (index) {
@@ -64,7 +94,7 @@ var MemoryController = (function () {
             case 0x4000:
                 return (address & 0xFFFF) / 4;
         }
-        throw new Error("Memory.translateVirtToPhys: Invalid virtual address");
+        throw new Error("Memory.translateVirtToPhys: Invalid virtual address " + address);
     };
     MemoryController.prototype.readByte = function (address) {
         var index = this.virtToPhys(address);

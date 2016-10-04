@@ -1,4 +1,6 @@
 import { BigInteger } from 'jsbn';
+
+import { IProgramContext, ProgramContext, IProgram } from '../program';
 import { ILegv8Op } from '../operations';
 
 export class MemoryAllocationResult {
@@ -6,6 +8,12 @@ export class MemoryAllocationResult {
 }
 
 export interface IMemoryController {
+
+    physToVirt(index: number): number;
+    
+    instructionIndexToVirtual(index: number);
+
+    virtToPhys(address: number);
 
     readByte(address: number): number;
 
@@ -38,12 +46,18 @@ export interface IMemoryController {
     allocateStaticDataBlock(length: number): number;
 
     allocateDynamicDataBlock(length: number): number;
+
+    canFetchInstruction(address: number): boolean;
     
     fetchInstruction(address: number): ILegv8Op;
 
+    loadProgram(program: IProgram): IProgramContext;
+
     getProgramBaseAddress(): number;
 
-    getStackBaseAddress(): number
+    getStackBaseAddress(): number;
+
+    reset();
 
 }
 
@@ -64,18 +78,32 @@ export class MemoryController implements IMemoryController {
     private STACK_BASE = 0x7FFFFFFF;
 
     private _data: ArrayBuffer;
-    private _program: Array<ILegv8Op>;
-    private _programLoaded: boolean = false;
-    private _canContinue: boolean = false;
     private view: DataView;
+
+    private _program: Array<ILegv8Op>;
+    private _context: IProgramContext;
+    private _programLoaded: boolean = false;
 
     private _staticIndex: number = 0;
     private _dynamicIndex: number = 0;
-
+    
     constructor() {
-        this._data = new ArrayBuffer(0x10000*3);
+        this._data = new ArrayBuffer(0x10000*2);
         this.view = new DataView(this._data);
         this._program = new Array();
+    }
+
+    reset() {
+        this._data = new ArrayBuffer(0x10000*2);
+        this.view = new DataView(this._data);
+        this._program = new Array();
+        this._staticIndex = 0;
+        this._dynamicIndex = 0;
+        this._programLoaded = false;
+    }
+
+    public canFetchInstruction(address: number): boolean {
+        return this.virtToPhys(address) < this._program.length;
     }
 
     public fetchInstruction(address: number): ILegv8Op {
@@ -84,12 +112,23 @@ export class MemoryController implements IMemoryController {
 
         if ( this._program.length == 0 || this._programLoaded == false) {
             throw new Error("The program was not loaded");
-        } else if ( instructionIndex >= this._program.length || !this._canContinue) {
-            this._canContinue = false;
+        } else if ( instructionIndex >= this._program.length ) {
             throw new RangeError("Program has reached the end of it's execution");
         }
 
         return this._program[instructionIndex];
+    }
+
+    public loadProgram(program: IProgram): IProgramContext {
+        try {
+            this._program = program.operations;
+            let programContext = new ProgramContext(program, this);
+            this._programLoaded = true;
+            return programContext;
+        } catch (e) {
+            this._programLoaded = false;
+            throw new Error("MemoryController.loadProgram: The program failed to load with error: " + e);
+        }
     }
 
     public allocateStaticDataBlock(length: number): number {
@@ -116,21 +155,21 @@ export class MemoryController implements IMemoryController {
      * Translates a physical value of our data buffer into a virtual
      * address such as 0xFFAD -> 0x7FFFFFAD.
      */
-    private physToVirt(index: number): number {
+    public physToVirt(index: number): number {
         if ( 0 <= index && index < 0x10000 ) {  // stack
             return index + 0x7FFF0000;
         } else if ( 0x10000 <= index && index < 0x20000 ) {   // static
-            return index + 0x10000000;
+            return index - 0x10000 + 0x10000000;
         } else {
-            return index + 0xC0000000;    // dynamic
+            return index - 0x20000 + 0xC0000000;    // dynamic
         }
     }
 
-    private instructionIndexToVirtual(index: number) {
+    public instructionIndexToVirtual(index: number) {
         return (index * 4) + 0x40000000;
     }
 
-    private virtToPhys(address: number) {
+    public virtToPhys(address: number) {
         switch ( (address & 0xFFFF0000 ) >> 16) {
             case 0x7FFF:    // stack
                 return address & 0xFFFF;
@@ -141,7 +180,7 @@ export class MemoryController implements IMemoryController {
             case 0x4000:    // executable program
                 return (address & 0xFFFF) / 4;
         }
-        throw new Error("Memory.translateVirtToPhys: Invalid virtual address");
+        throw new Error("Memory.translateVirtToPhys: Invalid virtual address " + address);
     }
 
     readByte(address: number): number {

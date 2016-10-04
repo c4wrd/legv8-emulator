@@ -1,6 +1,6 @@
 export interface IVarDecl {
     getLength(): number;
-    getBytes(): ArrayBuffer;
+    getByte(index: number): number
 }
 
 export abstract class VariableDeclaration<Type> implements IVarDecl {
@@ -16,8 +16,8 @@ export abstract class VariableDeclaration<Type> implements IVarDecl {
 
     abstract init(value: Type);
 
-    getBytes(): ArrayBuffer {
-        return this.buffer;
+    getByte(index: number): number {
+        return this.view.getUint8(index);
     }
 
     getLength(): number {

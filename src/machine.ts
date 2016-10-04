@@ -10,25 +10,40 @@
  */
 
 import { BigInteger } from 'jsbn';
+
 import { Register } from './cpu';
 import { Flags } from './flags';
 import { IMemoryController } from './memory';
 import { Int64Mask, Int } from './math';
+import { IProgramContext, IProgram } from './program';
+
 
 export class LEGv8Machine {
 
-    private _pc: number;
-    private memory_controller: IMemoryController;
+    private _context: IProgramContext
+
+    public pc: number;
     public registers: BigInteger[];
     public flags: Flags;
 
-    constructor(memory_ctrl: IMemoryController) {
+    constructor(public memoryController: IMemoryController) {
         this.registers = new Array<BigInteger>(32);
         this.flags = new Flags();
-        this._pc = 0;
+        this.pc = 0;
         for ( var i = 0 ; i < 32 ; i++ ) {
             this.registers[i] = Int.make(0);
         }
+    }
+
+    public reset() {
+        this.registers = new Array<BigInteger>(32);
+        this.flags = new Flags();
+        this.pc = 0;
+        for ( var i = 0 ; i < 32 ; i++ ) {
+            this.registers[i] = Int.make(0);
+        }
+        this._context = null;
+        this.memoryController.reset();
     }
 
     public get sp (): BigInteger {
@@ -47,10 +62,6 @@ export class LEGv8Machine {
         return this.registers[Register.XZR];
     }
 
-    public get pc() {
-        return this._pc;
-    }
-
     /*
      * Safely set's a register value, ensuring it does not exceed 64 bits.
      * If it does exceed, it will be ANDed with a 64Bit mask to retain
@@ -65,4 +76,21 @@ export class LEGv8Machine {
         this.registers[register] = value.and(Int64Mask);
     }
 
+    public loadProgram(program: IProgram) {
+        this._context = this.memoryController.loadProgram(program);
+        this.pc = this.memoryController.getProgramBaseAddress();
+    }
+
+    public get context(): IProgramContext {
+        return this._context;
+    }
+
+    public execute() {
+        if ( this.memoryController.canFetchInstruction(this.pc) ) {
+            this.memoryController.fetchInstruction(this.pc).execute(this);
+            this.pc += 4;
+        } else {
+            throw new Error("LEGv8Machine.execute: Cannot continue.")
+        }
+    }
 }

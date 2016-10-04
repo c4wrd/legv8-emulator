@@ -58,6 +58,7 @@ export declare enum LEGv8OpCode {
     STURD = 54,
     UDIV = 55,
     UMULH = 56,
+    SYSTEM = 57,
 }
 export declare enum LEGv8OpType {
     R = 0,
@@ -66,11 +67,17 @@ export declare enum LEGv8OpType {
     B = 3,
     CB = 4,
     IW = 5,
+    SYSTEM = 6,
 }
 export interface ILegv8Op {
     opcode: LEGv8OpCode;
     type: LEGv8OpType;
     execute(machine: LEGv8Machine): any;
+}
+export declare abstract class SystemOperation implements ILegv8Op {
+    opcode: LEGv8OpCode;
+    type: LEGv8OpType.SYSTEM;
+    abstract execute(machine: LEGv8Machine): any;
 }
 export declare abstract class LEGv8Op_R implements ILegv8Op {
     opcode: LEGv8OpCode;

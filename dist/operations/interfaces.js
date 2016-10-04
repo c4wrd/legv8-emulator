@@ -57,6 +57,7 @@
     LEGv8OpCode[LEGv8OpCode["STURD"] = 54] = "STURD";
     LEGv8OpCode[LEGv8OpCode["UDIV"] = 55] = "UDIV";
     LEGv8OpCode[LEGv8OpCode["UMULH"] = 56] = "UMULH";
+    LEGv8OpCode[LEGv8OpCode["SYSTEM"] = 57] = "SYSTEM";
 })(exports.LEGv8OpCode || (exports.LEGv8OpCode = {}));
 var LEGv8OpCode = exports.LEGv8OpCode;
 (function (LEGv8OpType) {
@@ -66,8 +67,15 @@ var LEGv8OpCode = exports.LEGv8OpCode;
     LEGv8OpType[LEGv8OpType["B"] = 3] = "B";
     LEGv8OpType[LEGv8OpType["CB"] = 4] = "CB";
     LEGv8OpType[LEGv8OpType["IW"] = 5] = "IW";
+    LEGv8OpType[LEGv8OpType["SYSTEM"] = 6] = "SYSTEM";
 })(exports.LEGv8OpType || (exports.LEGv8OpType = {}));
 var LEGv8OpType = exports.LEGv8OpType;
+var SystemOperation = (function () {
+    function SystemOperation() {
+    }
+    return SystemOperation;
+}());
+exports.SystemOperation = SystemOperation;
 var LEGv8Op_R = (function () {
     function LEGv8Op_R() {
     }

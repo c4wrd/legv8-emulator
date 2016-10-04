@@ -33,14 +33,12 @@ export class ProgramContext implements IProgramContext {
     private init(program: IProgram, controller: IMemoryController) {
         program.variables.forEach((value, key) => {
             let varAddress = controller.allocateStaticDataBlock(value.getLength());
-            let bytes = value.getBytes();
 
-            for ( let i = 0; i < bytes.byteLength; i++ ) {
-                controller.storeByte(varAddress + i, bytes[i]);
+            for ( let i = 0; i < value.getLength(); i++ ) {
+                controller.storeByte(varAddress + i, value.getByte(i));
             }
 
             this.variables.set(key, varAddress);
-            
         });
 
         program.labels.forEach((value, key) => {
@@ -50,15 +48,15 @@ export class ProgramContext implements IProgramContext {
     }
 
     queryLabel(label: string): number {
-        if ( this.labels[label] !== undefined ) {
-            return this.labels[label];
+        if ( this.labels.has(label) ) {
+            return this.labels.get(label);
         }
         throw new Error("ProgramContext.queryVariable: Could not find the label " + label + " in the program context");
     }
 
     queryVariable(varname: string): number {
-        if ( this.variables[varname] !== undefined ) {
-            return this.variables[varname];
+        if ( this.variables.has(varname) ) {
+            return this.variables.get(varname);
         }
         throw new Error("ProgramContext.queryVariable: Could not find variable " + varname + " in the program context");
     }

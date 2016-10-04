@@ -2,16 +2,21 @@ import { BigInteger } from 'jsbn';
 import { Register } from './cpu';
 import { Flags } from './flags';
 import { IMemoryController } from './memory';
+import { IProgramContext, IProgram } from './program';
 export declare class LEGv8Machine {
-    private _pc;
-    private memory_controller;
+    memoryController: IMemoryController;
+    private _context;
+    pc: number;
     registers: BigInteger[];
     flags: Flags;
-    constructor(memory_ctrl: IMemoryController);
+    constructor(memoryController: IMemoryController);
+    reset(): void;
     readonly sp: BigInteger;
     readonly fp: BigInteger;
     readonly lr: BigInteger;
     readonly xzr: BigInteger;
-    readonly pc: number;
     safelySetRegister(register: Register, value: BigInteger): void;
+    loadProgram(program: IProgram): void;
+    readonly context: IProgramContext;
+    execute(): void;
 }

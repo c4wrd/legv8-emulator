@@ -1,4 +1,5 @@
 import { BigInteger } from 'jsbn';
+import { IProgramContext, IProgram } from '../program';
 import { ILegv8Op } from '../operations';
 export declare class MemoryAllocationResult {
     success: boolean;
@@ -6,6 +7,9 @@ export declare class MemoryAllocationResult {
     constructor(success: boolean, address: number);
 }
 export interface IMemoryController {
+    physToVirt(index: number): number;
+    instructionIndexToVirtual(index: number): any;
+    virtToPhys(address: number): any;
     readByte(address: number): number;
     storeByte(address: number, value: number): void;
     readHalfWord(address: number): number;
@@ -22,23 +26,35 @@ export interface IMemoryController {
     storeDoubleWord(address: number, value: BigInteger): any;
     allocateStaticDataBlock(length: number): number;
     allocateDynamicDataBlock(length: number): number;
+    canFetchInstruction(address: number): boolean;
     fetchInstruction(address: number): ILegv8Op;
+    loadProgram(program: IProgram): IProgramContext;
+    getProgramBaseAddress(): number;
+    getStackBaseAddress(): number;
+    reset(): any;
 }
 export declare class MemoryController implements IMemoryController {
+    private PROG_BASE;
+    private STACK_BASE;
     private _data;
-    private _program;
-    private _programLoaded;
-    private _canContinue;
     private view;
+    private _program;
+    private _context;
+    private _programLoaded;
     private _staticIndex;
     private _dynamicIndex;
     constructor();
+    reset(): void;
+    canFetchInstruction(address: number): boolean;
     fetchInstruction(address: number): ILegv8Op;
+    loadProgram(program: IProgram): IProgramContext;
     allocateStaticDataBlock(length: number): number;
     allocateDynamicDataBlock(length: number): number;
-    private physToVirt(index);
-    private instructionIndexToVirtual(index);
-    private virtToPhys(address);
+    getProgramBaseAddress(): number;
+    getStackBaseAddress(): number;
+    physToVirt(index: number): number;
+    instructionIndexToVirtual(index: number): number;
+    virtToPhys(address: number): number;
     readByte(address: number): number;
     storeByte(address: number, value: number): void;
     readHalfWord(address: number): number;

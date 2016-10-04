@@ -1,8 +1,33 @@
+import { inst_add, inst_addi} from './operations/arithmetic';
+import {Program} from './program';
 import { LEGv8Machine } from './machine';
-import { Memory } from './memory';
+import { MemoryController } from './memory';
+import { Register } from './cpu';
+import { Debugger } from './debugger';
 import { BigInteger } from 'jsbn';
 
-var memory = new Memory();
+var memory = new MemoryController();
 var machine = new LEGv8Machine(memory);
 
-new BigInteger('100').copyTo(machine.registers[0]);
+var prog = new Program();
+
+prog.pushLabel("main");
+
+var add = new inst_add();
+    add.Rd = Register.X0;
+    add.Rm = Register.X1;
+    add.Rn = Register.X2;
+
+var addi = new inst_addi();
+    addi.Rd = Register.X1;
+    addi.Rn = Register.XZR;
+    addi.ALU_immediate = 0xFF;
+
+prog.pushOperation(addi);
+prog.pushOperation(add);
+
+var dbg = new Debugger(machine);
+dbg.setProgram(prog);
+dbg.run();
+
+console.log(machine.registers[0].toString(16))

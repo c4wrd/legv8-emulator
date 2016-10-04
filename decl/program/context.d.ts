@@ -1,7 +1,6 @@
 import { IProgram } from './program';
 import { IMemoryController } from '../memory';
 export interface IProgramContext {
-    constructor(program: IProgram, controller: IMemoryController): any;
     queryLabel(label: string): number;
     queryVariable(label: string): number;
 }
