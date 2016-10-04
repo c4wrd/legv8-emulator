@@ -12,44 +12,51 @@
 import { BigInteger } from 'jsbn';
 import { Register } from './cpu';
 import { Flags } from './flags';
-import { IMemoryBuffer } from './memory';
-
-var Int64Mask = new BigInteger('FFFFFFFF', 16);
+import { IMemoryController } from './memory';
+import { Int64Mask } from './math';
 
 export class LEGv8Machine {
 
-    public flags: Flags;
-    
+    private _pc: number;
+    private memory_controller: IMemoryController;
     public registers: BigInteger[];
+    public flags: Flags;
 
-    constructor(public memory: IMemoryBuffer) {
+    constructor(memory_ctrl: IMemoryController) {
         this.registers = new Array<BigInteger>(32);
         this.flags = new Flags();
-        /*this.sp = memory.getStackTop();
-        this.fp = memory.getStackTop();
-        this.lr = 0;*/
+        this._pc = 0;
         for ( var i = 0 ; i < 32 ; i++ ) {
             this.registers[i] = new BigInteger('0');
         }
     }
 
-    public get sp () {
+    public get sp (): BigInteger {
         return this.registers[Register.SP];
     }
 
-    public get fp() {
+    public get fp(): BigInteger {
         return this.registers[Register.FP];
     }
 
-    public get lr() {
+    public get lr(): BigInteger {
         return this.registers[Register.LR];
     }
 
-    public get xzr() {
+    public get xzr(): BigInteger {
         return this.registers[Register.XZR];
     }
 
-    public set_register(register: Register, value: BigInteger): void {
+    public get pc() {
+        return this._pc;
+    }
+
+    /*
+     * Safely set's a register value, ensuring it does not exceed 64 bits.
+     * If it does exceed, it will be ANDed with a 64Bit mask to retain
+     * the 64 bit value and removing the rest.
+     */
+    public safelySetRegister(register: Register, value: BigInteger): void {
         if ( register == Register.XZR ) {
             return;
         }

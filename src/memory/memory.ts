@@ -1,4 +1,10 @@
-export interface IMemoryBuffer {
+import { BigInteger } from 'jsbn';
+
+export class MemoryAllocationResult {
+    constructor(public success: boolean, public address: number) {}
+}
+
+export interface IMemoryController {
 
     readByte(address: number): number;
 
@@ -14,91 +20,146 @@ export interface IMemoryBuffer {
 
     readSignedByte(address: number): number;
 
+    storeSignedByte(address: number, value: number);
+
     readSingedHalfWord(address: number): number;
+
+    storeSignedHalfWord(address: number, value: number);
 
     readSignedWord(address: number): number;
 
-    getStackTop(): number;
+    storeSignedWord(address: number, value: number);
+
+    readDoubleWord(address: number, value: BigInteger): BigInteger;
+
+    storeDoubleWord(address: number, value: BigInteger);
 
 }
 
-export class Memory implements IMemoryBuffer {
+/**
+ * Below is the memory layout of our fake LEGv8 machine.
+ * 
+ * Memory Type      | Address Range
+ * Stack            | 0x7FFF0000 - 0x7FFFFFFF(*) ( 0x7FFFFFFF is the top of the stack )
+ * Static           | 0x10000000 - 0x1000FFFF
+ * Dynamic          | 0xC0000000 - 0xC000FFFF
+ * Text             | 0x10000000 - 0x1000????(*) (There is no definite size on the program counter, 
+ *                                                being it is not actually pointing to data)
+ */
 
-    private _data: Uint8Array;
-    private _ram: Uint8Array;
+export class MemoryController implements IMemoryController {
+
+    private _data: ArrayBuffer;
+    private view: DataView;
 
     constructor() {
-        this._data = new Int8Array(0x1000);
-        this._ram = new Int8Array(0xEFFF);
+        this._data = new ArrayBuffer(0xFFFF*3);
+        this.view = new DataView(this._data);
     }
 
-    getStackTop(): number {
-        return 0xFFFF;
+    /**
+     * Translates a physical value of our data buffer into a virtual
+     * address such as 0xFFAD -> 0x7FFFFFAD.
+     */
+    private physToVirt(address: number): number {
+        if ( address <= 0xFFFF ) {  // stack
+            return address + 0x7FFF0000;
+        } else if ( address <= 0xFFFF * 2 ) {   // static
+            return address + 0x10000000;
+        } else {
+            return address + 0xC0000000;    // dynamic
+        }
+    }
+
+    private virtToPhys(address: number) {
+        switch ( (address & 0xFFFF0000 ) >> 16) {
+            case 0x7FFF:    // stack
+                return address & 0xFFFF;
+            case 0x1000:    // static
+                return address & 0xFFFF + 0xFFFF;
+            case 0xC000:    // dynamic
+                return address & 0xFFFF + (0xFFFF * 2);
+        }
+        throw new Error("Memory.translateVirtToPhys: Invalid virtual address");
     }
 
     readByte(address: number): number {
-        if ( address >= 0x1000 ) {
-            return this._data[address - 0x1000];
-        } else {
-            return this._data[address];
-        }
+        var index = this.virtToPhys(address);
+        return this.view.getUint8(index);
     }
 
     storeByte(address: number, value: number): void {
-        if ( value > 0xFF ) {
-            throw new Error("Memory.storeByte: Attempted to store a value greater than 0xFF");
-        }
-
-        if ( address >= 0x1000 ) {
-            this._data[address - 0x1000] = value;
-        } else {
-            this._data[address] = value;
-        }
+        var index = this.virtToPhys(address);
+        this.view.setUint8(index, value);
     }
 
-    readHalfWord(address: number) {
-        return this.readByte(address)
-            + (this.readByte(address + 1) << 8);
+    readHalfWord(address: number): number {
+        var index = this.virtToPhys(address);
+        return this.view.getUint16(index);
     }
 
     storeHalfWord(address: number, value: number) {
-        if ( value > 0xFFFF ) {
-            throw new Error("Memory.storeHalfWord: Attempted to store a value greater than 0xFFFF");
-        }
-
-        for ( var i = 0 ; i < 2 ; i++ ) {
-            this.storeByte(address + i, (value & (0xFF << (i*8))) >> (i * 8));
-        }
-
+        var index = this.virtToPhys(address);
+        this.view.setUint16(index, value);   
     }
 
     readWord(address: number) {
-         return this.readByte(address)
-             + (this.readByte(address + 1) << 8)
-             + (this.readByte(address + 2) << 16)
-             + (this.readByte(address + 3) << 24);
-
+         var index = this.virtToPhys(address);
+         return this.view.getUint32(index);
     }
 
     storeWord(address: number, value: number) {
-        if ( value > 0xFFFFFFFF ) {
-            throw new Error("Memory.storeWord: Attempted to store a value greater than 0xFFFFFFFF");
-        }
-
-        for ( var i = 0 ; i < 4 ; i++ ) {
-            this.storeByte(address + i, (value & (0xFF << (i * 8))) >> (i * 8));
-        }
+        var index = this.virtToPhys(address);
+        return this.view.setUint32(index, value);
     }
 
     readSignedByte(address: number): number {
-        return this.readByte(address) << 0;
+        var index = this.virtToPhys(address);
+        return this.view.getInt8(index);
+    }
+
+    storeSignedByte(address: number, value: number) {
+        var index = this.virtToPhys(address);
+        return this.view.setInt8(index, value);
     }
 
     readSingedHalfWord(address: number): number {
-        return this.readHalfWord(address) << 0;
+        var index = this.virtToPhys(address);
+        return this.view.getInt16(index);
+    }
+
+    storeSignedHalfWord(address: number, value: number) {
+        var index = this.virtToPhys(address);
+        return this.view.setInt16(index, value);
     }
 
     readSignedWord(address: number): number {
-        return this.readWord(address) << 0;
+        var index = this.virtToPhys(address);
+        return this.view.getInt32(index);
     }
+
+    storeSignedWord(address: number, value: number) {
+        var index = this.virtToPhys(address);
+        return this.view.setInt32(index, value);
+    }
+
+    readDoubleWord(address: number): BigInteger {
+        var hi = this.readWord(address);
+        var lo = this.readWord(address + 4);
+        var loPart = new BigInteger(lo.toString());
+        var result = new BigInteger(hi.toString())
+            .shiftLeft(32)
+            .add(loPart);
+        return result;
+    }
+
+    storeDoubleWord(address: number, value: BigInteger) {
+        var hi = value.shiftRight(32).intValue();
+        var lo = value.and(new BigInteger('FFFFFFFF', 16)).intValue();
+
+        this.storeWord(address, hi);
+        this.storeWord(address + 4, lo);
+    }
+
+
 }
