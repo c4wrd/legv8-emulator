@@ -39,9 +39,9 @@ export interface IMemoryController {
 
     storeSignedWord(address: number, value: number);
 
-    readDoubleWord(address: number, value: BigInteger): BigInteger;
+    readDoubleWord(address: number | BigInteger): BigInteger;
 
-    storeDoubleWord(address: number, value: BigInteger);
+    storeDoubleWord(address: number | BigInteger, value: BigInteger);
 
     allocateStaticDataBlock(length: number): number;
 
@@ -243,7 +243,11 @@ export class MemoryController implements IMemoryController {
         return this.view.setInt32(index, value);
     }
 
-    readDoubleWord(address: number): BigInteger {
+    readDoubleWord(address: number | BigInteger): BigInteger {
+        if ( typeof address == "BigInteger" ) {
+            address = address.intValue();
+        }
+
         var hi = this.readWord(address);
         var lo = this.readWord(address + 4);
         var loPart = new BigInteger(lo.toString());
@@ -253,7 +257,11 @@ export class MemoryController implements IMemoryController {
         return result;
     }
 
-    storeDoubleWord(address: number, value: BigInteger) {
+    storeDoubleWord(address: number | BigInteger, value: BigInteger) {
+        if ( typeof address == "BigInteger" ) {
+            address = address.intValue();
+        }
+
         var hi = value.shiftRight(32).intValue();
         var lo = value.and(new BigInteger('FFFFFFFF', 16)).intValue();
 
