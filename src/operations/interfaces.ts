@@ -1,5 +1,6 @@
 import { LEGv8Machine } from '../machine';
 import { Register } from '../cpu';
+import { IProgramContext } from '../program';
 
 export enum LEGv8OpCode {
 
@@ -77,7 +78,7 @@ export interface ILegv8Op {
     opcode: LEGv8OpCode;
     type: LEGv8OpType;
 
-    execute(machine: LEGv8Machine);
+    execute(machine: LEGv8Machine, context?: IProgramContext);
 }
 
 export abstract class SystemOperation implements ILegv8Op {
@@ -99,7 +100,7 @@ export abstract class LEGv8Op_R implements ILegv8Op {
     Rn: Register;
     Rd: Register;
 
-    public abstract execute(machine: LEGv8Machine);
+    public abstract execute(machine: LEGv8Machine, context?: IProgramContext);
 }
 
 export abstract class LEGv8Op_I implements ILegv8Op {
@@ -135,7 +136,7 @@ export abstract class LEGv8Op_B implements ILegv8Op {
 
     Label: string;
 
-    public abstract execute(machine: LEGv8Machine);
+    public abstract execute(machine: LEGv8Machine, context: IProgramContext);
     
 }
 
@@ -147,7 +148,7 @@ export abstract class LEGv8Op_CB implements ILegv8Op {
     Label: string;
     Rt: Register;
 
-    public abstract execute(machine: LEGv8Machine);
+    public abstract execute(machine: LEGv8Machine, context: IProgramContext);
 
 }
 

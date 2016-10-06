@@ -87,8 +87,7 @@ export class LEGv8Machine {
 
     public execute() {
         if ( this.memoryController.canFetchInstruction(this.pc) ) {
-            this.memoryController.fetchInstruction(this.pc).execute(this);
-            this.pc += 4;
+            this.memoryController.fetchInstruction(this.pc).execute(this, this.context);
         } else {
             throw new Error("LEGv8Machine.execute: Cannot continue.")
         }

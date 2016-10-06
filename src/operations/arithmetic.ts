@@ -20,6 +20,7 @@ export class inst_addi extends Op.LEGv8Op_I {
             .add(Int.make(this.ALU_immediate));
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -48,6 +49,7 @@ export class inst_addis extends Op.LEGv8Op_I {
         }
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -75,6 +77,7 @@ export class inst_adds extends Op.LEGv8Op_R {
         }
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -87,6 +90,7 @@ export class inst_and extends Op.LEGv8Op_R {
             .and(machine.registers[this.Rm]);
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -98,6 +102,7 @@ export class inst_andi extends Op.LEGv8Op_I {
             .and(Int.make(this.ALU_immediate));
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -126,6 +131,7 @@ export class inst_andis extends Op.LEGv8Op_I {
         }
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -138,6 +144,7 @@ export class inst_eor extends Op.LEGv8Op_R {
             .xor(machine.registers[this.Rm]);
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
@@ -149,6 +156,7 @@ export class inst_eori extends Op.LEGv8Op_I {
             .xor(Int.make(this.ALU_immediate));
 
         machine.safelySetRegister(this.Rd, value);
+        machine.pc += 4;
     }
 
 }
