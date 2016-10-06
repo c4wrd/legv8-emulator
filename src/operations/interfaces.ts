@@ -133,7 +133,7 @@ export abstract class LEGv8Op_B implements ILegv8Op {
     opcode: LEGv8OpCode;
     type: LEGv8OpType.B;
 
-    BR_address: number;
+    Label: string;
 
     public abstract execute(machine: LEGv8Machine);
     
@@ -144,7 +144,7 @@ export abstract class LEGv8Op_CB implements ILegv8Op {
     opcode: LEGv8OpCode;
     type: LEGv8OpType.CB;
 
-    COND_BR_address: number;
+    Label: string;
     Rt: Register;
 
     public abstract execute(machine: LEGv8Machine);
