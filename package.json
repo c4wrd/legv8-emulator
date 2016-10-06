@@ -11,9 +11,11 @@
   "dependencies": {
     "@types/core-js": "^0.9.34",
     "core-js": "^2.4.1",
-    "jsbn": "^0.1.0"
+    "jsbn": "^0.1.0",
+    "webpack": "^1.13.2"
   },
   "devDependencies": {
+    "ts-loader": "^0.8.2",
     "typescript": "^2.0.3"
   }
 }

@@ -2,11 +2,11 @@
   "compilerOptions": {
     "target": "es5",
     "rootDir": "src",
-    "outDir": "dist",
+    "outDir": "dist/tsc",
     "moduleResolution": "node",
     "module": "commonjs",
     "declaration": false,
-    "declarationDir": "decl",
+    /*"declarationDir": "decl",*/
     "removeComments": true,
     "noLib": false,
     "emitDecoratorMetadata": true,
