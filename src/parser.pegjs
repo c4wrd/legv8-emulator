@@ -1,5 +1,7 @@
 {
-	function classify_op(op) { console.log(op); return Object; }
+	function classify_op(op) { 
+        return window.classify_op(op); 
+    }
 }
 
 OPERATIONS = (_? exp:EXPRESSION _? { return exp; })*
@@ -96,9 +98,18 @@ LEG_OP_R
         op.shamt = shamt;
         return op;
     }
+    / "BR" _s rn:Reg {
+        var op = classify_op("BR");
+        if ( op == null ) {
+        	expected("The operation was not valid");
+        }
+        op = new op();
+        op.Rn = rn;
+        return op;
+    }
 
 OpIdentifer_R
-	= (
+	= op:(
     "ADD" "S"?
     / "AND" "S"?
     / "BR"
@@ -106,24 +117,39 @@ OpIdentifer_R
     / "LSL"
     / "LSR"
     / "ORR"
-    / "SUB" "S"?)
+    / "SUB" "S"?) {
+        if ( typeof op != 'string' ) {
+            return op.join('');
+        }
+        return op;
+    }
     
 OpIdentifier_I
-	= (
+	= op:(
     "ADDI" "S"?
     / "ANDI" "S"?
     / "EORI"
     / "ORRI"
     / "SUBI" "S"?
-    )
+    ) {
+        if ( typeof op != 'string' ) {
+            return op.join('');
+        }
+        return op;
+    }
     
 OpIdentifier_B
-	= (
+	= op:(
     "B" "L"?
-	)
+	) {
+        if ( typeof op != 'string' ) {
+            return op.join('');
+        }
+        return op;
+    }
 
 OpIdentifier_CB
-	= (
+	= op:(
     "B." 
     "LT"?
     "LE"?
@@ -131,15 +157,25 @@ OpIdentifier_CB
     "NE"?
     "GT"?
     "GE"?	
-   	)
+   	) {
+        if ( typeof op != 'string' ) {
+            return op.join('').replace(".", "");
+        }
+        return op;
+    }
     
 OpIdentifier_D
-	= (
+	= op:(
     "LDUR" "B"? "H"? "SW"?
     / "LDXR"
     / "STUR" "B"? "H"? "W"?
     / "STXR"
-    )
+    ) {
+        if ( typeof op != 'string' ) {
+            return op.join('');
+        }
+        return op;
+    }
     
 Regc
 	= _? reg:Register "," _? { return reg; }
@@ -148,7 +184,12 @@ Reg
 	= _? reg:Register ","? _? { return reg; }
 
 Register
-	= RegisterIdent reg:Integer { return reg  }
+	= RegisterIdent reg:Integer { 
+        if ( reg < 28 ) {
+            return reg;
+        }
+        expected("Error: expected a register in the range of 0-X28");
+    }
 	/ "SP" { return 28; }
     / "FP" { return 29; }
     / "LR" { return 30; }

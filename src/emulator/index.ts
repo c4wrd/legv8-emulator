@@ -1,11 +1,13 @@
 import { inst_add, inst_addi} from './operations/arithmetic';
-import {Program} from './program';
+import { Program } from './program';
 import { LEGv8Machine } from './machine';
 import { MemoryController } from './memory';
 import { Register } from './cpu';
 import { Debugger } from './debugger';
 import { BigInteger } from 'jsbn';
+import { classify_op } from './operations';
 
+/*
 var memory = new MemoryController();
 var machine = new LEGv8Machine(memory);
 
@@ -28,6 +30,17 @@ prog.pushOperation(add);
 
 var dbg = new Debugger(machine);
 dbg.setProgram(prog);
-dbg.run();
+console.log(dbg);
 
-console.log(machine.registers[0].toString(16))
+export {
+    dbg as Debugger
+}
+*/
+
+export {
+    Debugger,
+    LEGv8Machine,
+    MemoryController,
+    classify_op,
+    Program
+}

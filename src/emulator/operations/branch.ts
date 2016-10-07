@@ -15,6 +15,25 @@ export class inst_b extends Op.LEGv8Op_B {
 
 }
 
+export class inst_br extends Op.LEGv8Op_R {
+
+    execute(machine: LEGv8Machine, context: IProgramContext) {
+        let address = machine.registers[this.Rn.valueOf()].intValue();
+        machine.pc = address;
+    }
+
+}
+
+export class inst_bl extends Op.LEGv8Op_B {
+
+    execute(machine: LEGv8Machine, context: IProgramContext) {
+        let address = context.queryLabel(this.Label);
+        machine.registers[Register.LR] = Int.make(machine.pc + 4);
+        machine.pc = address;
+    }
+
+}
+
 export class inst_blt extends Op.LEGv8Op_CB {
 
     execute(machine: LEGv8Machine, context: IProgramContext) {

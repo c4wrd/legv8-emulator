@@ -12,6 +12,7 @@ export interface IProgram {
     pushLabel(label: string);
     pushOperation(operation: ILegv8Op);
     pushVarDeclaration(name: string, variableDeclaration: IVarDecl);
+    loadCompiled(operations: Array<Object>);
 
 }
 
@@ -37,6 +38,16 @@ export class Program implements IProgram {
 
     pushVarDeclaration(name: string, variableDeclaration: IVarDecl) {
         this.variables.set(name, variableDeclaration);
+    }
+
+    loadCompiled(operations: Array<Object>) {
+        for ( var operation of operations ) {
+            if ( operation['type'] !== undefined ) {
+                this.pushLabel(operation['value']);
+            } else {
+                this.pushOperation(operation as ILegv8Op);
+            }
+        }
     }
 
 }

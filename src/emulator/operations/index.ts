@@ -17,9 +17,16 @@ var OPERATION_MAP = {
     ANDIS: ops.inst_andis,
     EOR: ops.inst_eor,
     EORI: ops.inst_eori,
+    LSL: ops.inst_lsl,
+    LSR: ops.inst_lsr,
+    SUB: ops.inst_sub,
+    SUBI: ops.inst_subi,
+    SUBIS: ops.inst_subis,
+    SUBS: ops.inst_subs,
 
     // Branching core
     B: ops.inst_b,
+    BR: ops.inst_br,
     BLT: ops.inst_blt,
     BLE: ops.inst_ble,
     BNE: ops.inst_bne,
@@ -43,7 +50,8 @@ var OPERATION_MAP = {
 }
 
 export function classify_op(operation: string) {
-    operation = operation.toLowerCase();
+    operation = operation.toUpperCase();
+    
     if ( OPERATION_MAP[operation] !== undefined ) {
         return OPERATION_MAP[operation];
     } else {

@@ -1,8 +1,9 @@
 export enum Flag {
-    NEGATIVE = 1 << 0,
-    ZERO = 1 << 1,
-    OVERFLOW = 1 << 2,
-    CARRY = 1 << 3
+    NULL = 1 << 0,
+    NEGATIVE = 1 << 1,
+    ZERO = 1 << 2,
+    OVERFLOW = 1 << 3,
+    CARRY = 1 << 4
 }
 
 
@@ -11,7 +12,7 @@ export class Flags {
     state: Flag;
 
     constructor() {
-        this.state = 0;
+        this.state = Flag.NULL;
     }
 
     clear() {

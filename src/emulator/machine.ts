@@ -79,6 +79,7 @@ export class LEGv8Machine {
     public loadProgram(program: IProgram) {
         this._context = this.memoryController.loadProgram(program);
         this.pc = this.memoryController.getProgramBaseAddress();
+        this.registers[Register.SP] = Int.make(this.memoryController.getStackBaseAddress());
     }
 
     public get context(): IProgramContext {
@@ -92,4 +93,5 @@ export class LEGv8Machine {
             throw new Error("LEGv8Machine.execute: Cannot continue.")
         }
     }
+    
 }
