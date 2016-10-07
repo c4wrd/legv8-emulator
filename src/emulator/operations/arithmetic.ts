@@ -1,4 +1,4 @@
-import {Int} from '../math';
+import {Int, Int64Mask} from '../math';
 import { Register } from '../cpu';
 import { LEGv8Machine } from '../machine';
 import * as Op from './interfaces';
@@ -36,7 +36,8 @@ export class inst_addis extends Op.LEGv8Op_I {
         let bSign = addImmediate.signum();
 
         let value = machine.registers[this.Rn]
-            .add(Int.make(this.ALU_immediate));
+            .add(Int.make(this.ALU_immediate))
+            .and(Int64Mask);
 
         if ( (aSign == 1 && bSign == 1 && value.signum() < 1 ) || (aSign == -1 && bSign == -1 && value.signum() > -1) ) {
             machine.flags.overflow();
@@ -64,7 +65,8 @@ export class inst_adds extends Op.LEGv8Op_R {
         let bSign = machine.registers[this.Rm].signum();
 
         let value = machine.registers[this.Rn]
-            .add(machine.registers[this.Rm]);
+            .add(machine.registers[this.Rm])
+            .and(Int64Mask);
 
         if ( (aSign == 1 && bSign == 1 && value.signum() < 1 ) || (aSign == -1 && bSign == -1 && value.signum() > -1) ) {
             machine.flags.overflow();
@@ -118,7 +120,8 @@ export class inst_andis extends Op.LEGv8Op_I {
         let bSign = addImmediate.signum();
 
         let value = machine.registers[this.Rn]
-            .and(addImmediate);
+            .and(addImmediate)
+            .and(Int64Mask);
 
         if ( (aSign == 1 && bSign == 1 && value.signum() < 1 ) || (aSign == -1 && bSign == -1 && value.signum() > -1) ) {
             machine.flags.overflow();
@@ -197,7 +200,8 @@ export class inst_subis extends Op.LEGv8Op_I {
         let bSign = addImmediate.signum();
 
         let value = machine.registers[this.Rn]
-            .subtract(Int.make(this.ALU_immediate));
+            .subtract(Int.make(this.ALU_immediate))
+            .and(Int64Mask);
 
         if ( (aSign == bSign) && ((aSign == -1 && bSign == 1 && value.signum() == 1 ) || (aSign == 1 && bSign == -1 && value.signum() == 1) ) ) {
             machine.flags.overflow();
@@ -225,7 +229,8 @@ export class inst_subs extends Op.LEGv8Op_R {
         let bSign = machine.registers[this.Rm].signum();
 
         let value = machine.registers[this.Rn]
-            .subtract(machine.registers[this.Rm]);
+            .subtract(machine.registers[this.Rm])
+            .and(Int64Mask);
 
         if ( (aSign == bSign ) && ((aSign == -1 && bSign == 1 && value.signum() == 1 ) || (aSign == 1 && bSign == -1 && value.signum() == 1) ) ) {
             machine.flags.overflow();

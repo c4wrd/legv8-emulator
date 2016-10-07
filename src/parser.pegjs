@@ -1,6 +1,14 @@
 {
-	function classify_op(op) { 
+	/*function classify_op(op) { 
         return window.classify_op(op); 
+    }*/
+    function classify_op(op) {
+    	if ( window.classify_op !== undefined ) {
+        	return window.classify_op(op);
+        } else { // debugging
+           console.log(op);
+           return Object;
+        }
     }
 }
 
@@ -13,10 +21,33 @@ EXPRESSION
     / op:LEG_OP_D { return op }
     / op:LEG_OP_B { return op }
     / op:LEG_OP_CB { return op }
+    / op:LEG_OP_SYS { return op }
 
-Label
+Label "Label"
 	= id:Identifier ":" { return {"type": "label", "value": id } }
     
+LEG_OP_SYS =
+    LEG_OP_MOV
+    / LEG_OP_MOVI
+
+LEG_OP_MOV
+    = "MOV" _s rd:Regc rn:Reg {
+        var op = classify_op("MOV");
+        op = new op();
+        op.Rd = rd;
+        op.Rn = rn;
+        return op;
+    }
+
+LEG_OP_MOVI
+    = "MOVI" _s rd:Regc immediate:IntegerStringVal {
+        var op = classify_op("MOVI");
+        op = new op();
+        op.Rd = rd;
+        op.Immediate = immediate;
+        return op;
+    }
+
 LEG_OP_CB
 	= id:OpIdentifier_CB _s rt:Regc label:Identifier {
     	var op = classify_op(id);
@@ -183,7 +214,7 @@ Regc
 Reg
 	= _? reg:Register ","? _? { return reg; }
 
-Register
+Register "Register"
 	= RegisterIdent reg:Integer { 
         if ( reg < 28 ) {
             return reg;
@@ -195,15 +226,26 @@ Register
     / "LR" { return 30; }
     / "XZR" { return 31; }
 
-RegisterIdent
+RegisterIdent "X0-X28"
 	= [xX]
     
 Identifier 
 	= [_a-zA-Z]+ { return text() }
     
+IntegerStringVal
+    = integer:Integer { return integer.toString() }
+    / "\"" value:HexString "\"" { return value; }
+    
 Immediate "ALU_immediate"
 	= "#" shamt:Integer { return shamt }
     
+HexString "a hexidecimal string"
+    = hex_chars:(HexChar)+ { return hex_chars.join(''); }
+
+HexChar
+    = Integer
+    / [a-fA-F]
+
 Integer "integer"
   = [0-9]+ { return parseInt(text(), 10); }
 

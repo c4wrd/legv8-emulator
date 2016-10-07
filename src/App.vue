@@ -6,12 +6,12 @@
         <div class="editor-parent">
             <div id="editor"></div>
         </div>
+        <p>{{ status }}</p>
         <ul>
             <li v-for="register, index in registers">
                 Register X{{ index }}: {{ register }}
             </li>
         </ul>
-        <p>{{ parsed }}</p>
     </div>
 </template>
 <script>    
@@ -45,7 +45,7 @@ export default {
         return {
             registers: [],
             editor: null,
-            parsed: null
+            status: null
         }
     },
     methods: {
@@ -61,12 +61,21 @@ export default {
         },
         compile() {
             try {
-                this.parsed = parser.parse(this.editor.getValue());
+                var parsed = parser.parse(this.editor.getValue());
                 var program = new Program();
-                program.loadCompiled(this.parsed);
+                program.loadCompiled(parsed);
                 dbg.setProgram(program);
+                this.editor.getSession().setAnnotations([]);
+                this.status = "Compiled " + parsed.length + " instructions and loaded.";
             } catch (e) {
-                this.parsed = "Failed to parse: " + e;
+                debugger;
+                this.editor.getSession().setAnnotations([{ 
+                    row: e.location.start.line - 1,
+                    column: e.location.start.column,
+                    text: e.toString(), 
+                    type: "error" 
+                }]);
+                this.status = "Failed to parse: " + e;
             }
         }
     }

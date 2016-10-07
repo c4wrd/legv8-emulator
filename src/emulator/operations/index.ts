@@ -46,7 +46,9 @@ var OPERATION_MAP = {
 
 
     // SYSTEM OPERATIONS
-    SET_REG: ops.inst_set_reg
+    //SET_REG: ops.inst_set_reg
+    MOV: ops.inst_mov,
+    MOVI: ops.inst_movi
 }
 
 export function classify_op(operation: string) {
